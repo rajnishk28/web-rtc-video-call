@@ -1,0 +1,8 @@
+import { io } from 'socket.io-client'
+
+export const connectSignaling = () =>
+  io(import.meta.env.VITE_API_URL ?? 'http://localhost:4000', {
+    transports: ['websocket', 'polling'],
+    autoConnect: true,
+    reconnection: true,
+  })

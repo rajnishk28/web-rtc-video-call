@@ -1,0 +1,10 @@
+[Unit]
+Description=Renew WebRTC stack Let's Encrypt certificate
+Wants=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/ubuntu/web-rtc
+ExecStart=/usr/bin/docker compose --env-file /home/ubuntu/web-rtc/deploy/.env -f /home/ubuntu/web-rtc/deploy/docker-compose.yml --profile tools run --rm certbot renew --quiet
+ExecStartPost=/usr/bin/docker compose --env-file /home/ubuntu/web-rtc/deploy/.env -f /home/ubuntu/web-rtc/deploy/docker-compose.yml exec -T nginx nginx -s reload
