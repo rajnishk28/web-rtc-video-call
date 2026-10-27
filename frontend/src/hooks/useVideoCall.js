@@ -17,6 +17,8 @@ export const useVideoCall = () => {
   const [remoteStream, setRemoteStream] = useState(null)
   const [muted, setMuted] = useState(false)
   const [cameraOff, setCameraOff] = useState(false)
+  const [remoteMuted, setRemoteMuted] = useState(false)
+  const [remoteCameraOff, setRemoteCameraOff] = useState(false)
 
   const socketRef = useRef(null)
   const pcRef = useRef(null)
@@ -24,6 +26,8 @@ export const useVideoCall = () => {
   const pendingOutgoingIceRef = useRef([])
   const pendingIncomingIceRef = useRef([])
   const localStreamRef = useRef(null)
+  const mutedRef = useRef(false)
+  const cameraOffRef = useRef(false)
   const roomIdRef = useRef('')
   const iceServersRef = useRef([])
 
@@ -61,6 +65,8 @@ export const useVideoCall = () => {
     localStreamRef.current = null
     setLocalStream(null)
     setRemoteStream(null)
+    setRemoteMuted(false)
+    setRemoteCameraOff(false)
 
     remotePeerIdRef.current = null
     pendingOutgoingIceRef.current = []
@@ -69,6 +75,8 @@ export const useVideoCall = () => {
     roomIdRef.current = ''
     setMuted(false)
     setCameraOff(false)
+    mutedRef.current = false
+    cameraOffRef.current = false
   }, [])
 
   const joinRoom = useCallback(
@@ -137,6 +145,16 @@ export const useVideoCall = () => {
           flushOutgoingIce(peerId, socket)
         }
 
+        const sendPeerState = () => {
+          const peerId = remotePeerIdRef.current
+          if (!peerId) return
+          socket.emit('peer-state', {
+            to: peerId,
+            muted: mutedRef.current,
+            cameraOff: cameraOffRef.current,
+          })
+        }
+
         socket.on('created', () => {
           setStatus('waiting')
         })
@@ -147,11 +165,15 @@ export const useVideoCall = () => {
 
         socket.on('ready', (payload) => {
           const peerId = payload.peers.find((id) => id !== socket.id)
-          if (peerId) rememberPeer(peerId)
+          if (peerId) {
+            rememberPeer(peerId)
+            sendPeerState()
+          }
         })
 
         socket.on('peer-joined', async ({ peerId }) => {
           rememberPeer(peerId)
+          sendPeerState()
           const currentPc =
             pcRef.current && pcRef.current.signalingState !== 'closed'
               ? pcRef.current
@@ -196,6 +218,11 @@ export const useVideoCall = () => {
           }
         )
 
+        socket.on('peer-state', ({ muted: peerMuted, cameraOff: peerCameraOff }) => {
+          if (typeof peerMuted === 'boolean') setRemoteMuted(peerMuted)
+          if (typeof peerCameraOff === 'boolean') setRemoteCameraOff(peerCameraOff)
+        })
+
         socket.on('room-full', () => {
           setError('That room already has two people.')
           setStatus('error')
@@ -204,6 +231,8 @@ export const useVideoCall = () => {
 
         socket.on('peer-left', () => {
           setRemoteStream(null)
+          setRemoteMuted(false)
+          setRemoteCameraOff(false)
           setStatus('waiting')
           remotePeerIdRef.current = null
           pendingOutgoingIceRef.current = []
@@ -252,6 +281,12 @@ export const useVideoCall = () => {
     setMuted((current) => {
       const next = !current
       setTrackEnabled(localStreamRef.current, 'audio', !next)
+      mutedRef.current = next
+      const socket = socketRef.current
+      const peerId = remotePeerIdRef.current
+      if (socket && peerId) {
+        socket.emit('peer-state', { to: peerId, muted: next, cameraOff: cameraOffRef.current })
+      }
       return next
     })
   }, [])
@@ -260,6 +295,12 @@ export const useVideoCall = () => {
     setCameraOff((current) => {
       const next = !current
       setTrackEnabled(localStreamRef.current, 'video', !next)
+      cameraOffRef.current = next
+      const socket = socketRef.current
+      const peerId = remotePeerIdRef.current
+      if (socket && peerId) {
+        socket.emit('peer-state', { to: peerId, muted: mutedRef.current, cameraOff: next })
+      }
       return next
     })
   }, [])
@@ -272,6 +313,8 @@ export const useVideoCall = () => {
     remoteStream,
     muted,
     cameraOff,
+    remoteMuted,
+    remoteCameraOff,
     joinRoom,
     leaveRoom,
     toggleMute,

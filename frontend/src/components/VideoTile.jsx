@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
+import { MicOff } from 'lucide-react'
 
-export const VideoTile = ({ stream, muted = false, mirror = false, label, placeholder, videoDisabled = false }) => {
+export const VideoTile = ({ stream, muted = false, mirror = false, label, placeholder, videoDisabled = false, videoDisabledLabel = 'Your camera is off', audioMuted = false }) => {
   const videoRef = useRef(null)
 
   useEffect(() => {
@@ -27,7 +28,7 @@ export const VideoTile = ({ stream, muted = false, mirror = false, label, placeh
             <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full border border-white/10 bg-white/[.05] text-lg text-slate-300 shadow-inner sm:mb-4 sm:h-16 sm:w-16">
               {videoDisabled ? '◌' : '▣'}
             </div>
-            <p className="text-xs leading-5 text-slate-300 sm:text-sm">{videoDisabled ? 'Your camera is off' : placeholder}</p>
+            <p className="text-xs leading-5 text-slate-300 sm:text-sm">{videoDisabled ? videoDisabledLabel : placeholder}</p>
           </div>
         </div>
       )}
@@ -36,6 +37,12 @@ export const VideoTile = ({ stream, muted = false, mirror = false, label, placeh
       <span className="absolute bottom-2.5 left-2.5 rounded-lg border border-white/10 bg-black/50 px-2.5 py-1.5 text-[11px] font-medium text-white backdrop-blur-md sm:bottom-3 sm:left-3 sm:px-3 sm:text-xs">
         {label}
       </span>
+      {audioMuted && (
+        <span className="absolute right-2.5 top-2.5 inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/60 px-2.5 py-1.5 text-[11px] font-medium text-white backdrop-blur-md sm:right-3 sm:top-3 sm:text-xs" aria-label={`${label} is muted`}>
+          <MicOff aria-hidden="true" className="h-3.5 w-3.5" />
+          Muted
+        </span>
+      )}
     </article>
   )
 }

@@ -133,6 +133,15 @@ export const initializeSocket = (httpServer, app) => {
       relaySignaling('ice-candidate', socket, payload, 'candidate')
     })
 
+    // Share microphone and camera state with the other participant.
+    socket.on('peer-state', (payload) => {
+      if (!payload || typeof payload !== 'object') return
+      const { to, muted, cameraOff } = payload
+      if (typeof to !== 'string' || !areRoommates(socket.id, to)) return
+      if (typeof muted !== 'boolean' || typeof cameraOff !== 'boolean') return
+      io.to(to).emit('peer-state', { from: socket.id, muted, cameraOff })
+    })
+
     // Voluntarily leave a room.
     socket.on('leave-room', (roomId) => {
       const id = normalizeRoomId(roomId) || socketRoom.get(socket.id)

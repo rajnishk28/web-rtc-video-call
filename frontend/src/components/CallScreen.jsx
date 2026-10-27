@@ -25,7 +25,7 @@ function ControlButton({ label, icon: Icon, onClick, pressed = false, danger = f
   )
 }
 
-export function CallScreen({ status, error, roomId, localStream, remoteStream, muted, cameraOff, leaveRoom, toggleMute, toggleCamera }) {
+export function CallScreen({ status, error, roomId, localStream, remoteStream, muted, cameraOff, remoteMuted, remoteCameraOff, leaveRoom, toggleMute, toggleCamera }) {
   return (
     <main className="flex h-[100svh] flex-col overflow-hidden bg-[#0a101a] text-white">
       <header className="flex h-14 shrink-0 items-center justify-between gap-3 px-3 sm:h-[68px] sm:px-6 lg:px-8">
@@ -43,8 +43,8 @@ export function CallScreen({ status, error, roomId, localStream, remoteStream, m
       </header>
 
       <section aria-label="Video call" className="grid min-h-0 flex-1 grid-cols-1 grid-rows-2 gap-2 px-2 pb-2 sm:gap-3 sm:px-4 sm:pb-3 md:grid-cols-2 md:grid-rows-1 md:px-6 lg:px-8">
-        <VideoTile stream={localStream} muted mirror label={cameraOff ? 'You · camera off' : 'You'} placeholder="Starting your camera…" videoDisabled={cameraOff} />
-        <VideoTile stream={remoteStream} label="Them" placeholder="Waiting for the other person to join…" />
+        <VideoTile stream={localStream} muted mirror label={cameraOff ? 'You · camera off' : 'You'} placeholder="Starting your camera…" videoDisabled={cameraOff} audioMuted={muted} />
+        <VideoTile stream={remoteStream} label="Them" placeholder="Waiting for the other person to join…" videoDisabled={remoteCameraOff} videoDisabledLabel="Their camera is off" audioMuted={remoteMuted} />
       </section>
 
       <nav className="flex h-[88px] shrink-0 items-center justify-center gap-3 border-t border-white/[.06] bg-[#0b111c] px-3 pb-[max(.35rem,env(safe-area-inset-bottom))] sm:h-[100px] sm:gap-5" aria-label="Call controls">
