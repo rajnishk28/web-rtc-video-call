@@ -16,7 +16,7 @@ export const createPeerConnection = (iceServers, handlers) => {
 
   pc.ontrack = (event) => {
     const [stream] = event.streams
-    if (stream) handlers.onRemoteTrack(stream)
+    if (stream) handlers.onRemoteTrack(stream, event.track)
   }
 
   pc.onconnectionstatechange = () => {

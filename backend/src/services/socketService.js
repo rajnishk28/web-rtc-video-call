@@ -136,10 +136,11 @@ export const initializeSocket = (httpServer, app) => {
     // Share microphone and camera state with the other participant.
     socket.on('peer-state', (payload) => {
       if (!payload || typeof payload !== 'object') return
-      const { to, muted, cameraOff } = payload
+      const { to, muted, cameraOff, screenSharing = false, screenStreamId = null } = payload
       if (typeof to !== 'string' || !areRoommates(socket.id, to)) return
-      if (typeof muted !== 'boolean' || typeof cameraOff !== 'boolean') return
-      io.to(to).emit('peer-state', { from: socket.id, muted, cameraOff })
+      if (typeof muted !== 'boolean' || typeof cameraOff !== 'boolean' || typeof screenSharing !== 'boolean') return
+      if (screenStreamId !== null && typeof screenStreamId !== 'string') return
+      io.to(to).emit('peer-state', { from: socket.id, muted, cameraOff, screenSharing, screenStreamId })
     })
 
     // Voluntarily leave a room.
